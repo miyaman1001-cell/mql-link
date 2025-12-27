@@ -1,0 +1,13 @@
+enabled=1
+state=KEEP
+command_id=20251227_2317_XAUUSD__NO RESPONSE__W___I___IS#9
+direction=_NO RESPONSE_
+watch_price=_No response_
+invalidate_price=_No response_
+bounce_points=_No response_
+stop_points=_No response_
+lots=_No response_
+max_spread_points=_No response_
+pos_action=_NO RESPONSE_
+pos_sl=_No response_
+pos_tp=_No response_
