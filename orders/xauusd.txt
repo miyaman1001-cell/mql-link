@@ -1,13 +1,5 @@
-enabled=1
 state=KEEP
-command_id=20251227_2329_XAUUSD_BUY_W4500_I4400_IS#11
-direction=BUY
-watch_price=4500
-invalidate_price=4400
 bounce_points=1500
 stop_points=1000
-lots=_No response_
-max_spread_points=_No response_
-pos_action=_NO RESPONSE_
-pos_sl=_No response_
-pos_tp=_No response_
+lots=0.01
+max_spread_points=80
