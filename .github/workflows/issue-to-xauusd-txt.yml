@@ -2,140 +2,117 @@ name: Issue -> orders/xauusd.txt
 
 on:
   issues:
-    types: [opened, edited, reopened]
+    types: [opened, edited, labeled, reopened]
 
 permissions:
   contents: write
   issues: read
 
+concurrency:
+  group: issue-to-orders-xauusd
+  cancel-in-progress: true
+
 jobs:
-  build:
+  write-order-file:
+    # ラベルが両方付いている Issue だけ実行
+    if: >
+      contains(github.event.issue.labels.*.name, 'order') &&
+      contains(github.event.issue.labels.*.name, 'xauusd')
     runs-on: ubuntu-latest
-    if: contains(github.event.issue.labels.*.name, 'order') && contains(github.event.issue.labels.*.name, 'xauusd')
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Generate orders/xauusd.txt from issue body
+      - name: Build orders/xauusd.txt from Issue body
         env:
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_BODY: ${{ github.event.issue.body }}
-          ISSUE_TITLE: ${{ github.event.issue.title }}
-          REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        shell: bash
         run: |
-          python3 - << 'PY'
-          import os, re
-          from datetime import datetime
-          from zoneinfo import ZoneInfo
-          from pathlib import Path
+          set -euo pipefail
 
-          issue_no = int(os.environ["ISSUE_NUMBER"])
-          body = os.environ["ISSUE_BODY"]
+          out="orders/xauusd.txt"
+          mkdir -p "$(dirname "$out")"
+          : > "$out"
 
-          def get_field(name: str) -> str:
-            """
-            Issue Forms の本文は概ね:
-            ### field_name
-            value
-            の形になるので、それを抽出。
-            """
-            pat = rf"^###\s+{re.escape(name)}\s*\n(.*?)(?=\n###\s+|\Z)"
-            m = re.search(pat, body, flags=re.M | re.S)
-            if not m:
-              return ""
-            v = m.group(1).strip()
-            # checkboxes が混ざるケース対策（- [x] ... など）
-            v = re.sub(r"^- \[[ xX]\]\s*", "", v, flags=re.M).strip()
-            # 空欄っぽい値の扱い
-            if v in ("", "_(No response)_"):
-              return ""
-            return v
+          # --- 見出し(### ...) を key に変換 ---
+          # Issueフォームの "label:" の文字列に合わせて case を調整してください。
+          # 例: label を日本語にしている場合は日本語に合わせる。
+          to_key() {
+            local h="$1"
+            # 余計な前後空白を除去
+            h="$(echo "$h" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
 
-          # ---- required ----
-          state = get_field("state") or "KEEP"
+            case "$h" in
+              "state") echo "state" ;;
+              "command_id") echo "command_id" ;;
+              "direction") echo "direction" ;;
+              "watch_price") echo "watch_price" ;;
+              "invalidate_price") echo "invalidate_price" ;;
+              "bounce_points") echo "bounce_points" ;;
+              "stop_points") echo "stop_points" ;;
+              "lots") echo "lots" ;;
+              "max_spread_points") echo "max_spread_points" ;;
+              "pos_action") echo "pos_action" ;;
+              "pos_sl") echo "pos_sl" ;;
+              "pos_tp") echo "pos_tp" ;;
+              # 使わない見出しは空で返す（＝出力しない）
+              *) echo "" ;;
+            esac
+          }
 
-          # ---- optional ----
-          direction = get_field("direction")  # BUY / SELL
-          watch_price = get_field("watch_price")
-          invalidate_price = get_field("invalidate_price")
-          bounce_points = get_field("bounce_points")
-          stop_points = get_field("stop_points")
-          lots = get_field("lots")
-          max_spread_points = get_field("max_spread_points")
-          pos_action = get_field("pos_action")
-          pos_sl = get_field("pos_sl")
-          pos_tp = get_field("pos_tp")
+          body="${ISSUE_BODY}"
 
-          # enabled は基本 1 固定（必要ならフォーム化できます）
-          enabled = "1"
+          current=""
+          while IFS= read -r line; do
+            # 見出し行 "### xxx"
+            if [[ "$line" =~ ^###[[:space:]](.+)$ ]]; then
+              current="${BASH_REMATCH[1]}"
+              continue
+            fi
 
-          # command_id 自動生成（JST）
-          tz = ZoneInfo("Asia/Tokyo")
-          now = datetime.now(tz)
-          ts = now.strftime("%Y%m%d_%H%M")
+            # 見出しの次に来る値を拾う（空行はスキップして次へ）
+            if [[ -n "$current" ]]; then
+              val="$(echo "$line" | sed -e 's/\r$//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
 
-          sym = "XAUUSD"
-          side = (direction or "NA").upper()
+              # 空行は無視して次の行へ（値が現れるまで待つ）
+              if [[ -z "$val" ]]; then
+                continue
+              fi
 
-          def sanitize_price(s: str) -> str:
-            if not s:
-              return "NA"
-            s = s.strip()
-            # 小数点は "_" に
-            s = s.replace(".", "_")
-            # それ以外の危険文字除去
-            s = re.sub(r"[^0-9_+-]", "", s)
-            return s or "NA"
+              # 未回答マーカーは捨てる（＝行を作らない）
+              if [[ "$val" == "_No response_" ]]; then
+                current=""
+                continue
+              fi
 
-          w = sanitize_price(watch_price)
-          inv = sanitize_price(invalidate_price)
+              key="$(to_key "$current")"
+              if [[ -n "$key" ]]; then
+                # 値に "###" が混ざる等の事故を軽減（必要ならここで更に整形）
+                echo "${key}=${val}" >> "$out"
+              fi
 
-          command_id = f"{ts}_{sym}_{side}_W{w}_I{inv}_IS#{issue_no}"
+              current=""
+            fi
+          done <<< "$body"
 
-          # 出力するキー順（EA側のパーサーに合わせやすい）
-          lines = []
-          def put(k: str, v: str):
-            v = (v or "").strip()
-            if v == "":
-              return
-            lines.append(f"{k}={v}")
+          # 便利ログ
+          echo "----- generated: $out -----"
+          cat "$out" || true
 
-          put("enabled", enabled)
-          put("state", state)
-          put("command_id", command_id)
-
-          put("direction", direction.upper() if direction else "")
-          put("watch_price", watch_price)
-          put("invalidate_price", invalidate_price)
-          put("bounce_points", bounce_points)
-          put("stop_points", stop_points)
-
-          put("lots", lots)
-          put("max_spread_points", max_spread_points)
-
-          put("pos_action", pos_action.upper() if pos_action else "")
-          put("pos_sl", pos_sl)
-          put("pos_tp", pos_tp)
-
-          out_dir = Path("orders")
-          out_dir.mkdir(parents=True, exist_ok=True)
-          out_path = out_dir / "xauusd.txt"
-          out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-
-          print("Wrote:", out_path)
-          print(out_path.read_text(encoding="utf-8"))
-          PY
-
-      - name: Commit & Push
+      - name: Commit & Push (if changed)
+        shell: bash
         run: |
-          if git status --porcelain | grep -q .; then
-            git config user.name  "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add orders/xauusd.txt
-            git commit -m "Update orders/xauusd.txt (issue #${{ github.event.issue.number }})"
-            git push
-          else
-            echo "No changes."
+          set -euo pipefail
+          if git diff --quiet -- orders/xauusd.txt; then
+            echo "No changes. Skip commit."
+            exit 0
           fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add orders/xauusd.txt
+          git commit -m "Update orders/xauusd.txt from Issue #${{ github.event.issue.number }}"
+          git push
