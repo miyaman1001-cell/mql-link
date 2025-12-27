@@ -1,0 +1,107 @@
+name: XAUUSD Trade Command
+description: XAUUSD EA への指示送信フォーム
+title: "XAUUSD: "
+labels: ["xauusd", "command"]
+
+body:
+  - type: dropdown
+    id: state
+    attributes:
+      label: State
+      description: EAの状態制御
+      options:
+        - KEEP
+        - IDLE
+        - BREAK
+        - MONITOR
+      default: 0
+    validations:
+      required: true
+
+  - type: input
+    id: command_id
+    attributes:
+      label: command_id
+      description: 例）20251226_001（空欄可）
+      placeholder: "YYYYMMDD_xxx"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: direction
+    attributes:
+      label: direction
+      options:
+        - BUY
+        - SELL
+      description: エントリー方向（MONITOR時）
+    validations:
+      required: false
+
+  - type: input
+    id: watch_price
+    attributes:
+      label: watch_price
+      description: 監視開始価格
+    validations:
+      required: false
+
+  - type: input
+    id: invalidate_price
+    attributes:
+      label: invalidate_price
+      description: 無効判定価格
+    validations:
+      required: false
+
+  - type: input
+    id: bounce_points
+    attributes:
+      label: bounce_points
+      description: サポート反発判定幅（points）
+    validations:
+      required: false
+
+  - type: input
+    id: stop_points
+    attributes:
+      label: stop_points
+      description: 損切幅（points）
+    validations:
+      required: false
+
+  - type: input
+    id: lots
+    attributes:
+      label: lots
+      description: ロット数（未入力なら 0.01）
+    validations:
+      required: false
+
+  - type: dropdown
+    id: pos_action
+    attributes:
+      label: pos_action
+      options:
+        - ""
+        - SET_SLTP
+        - CLEAR_SLTP
+      description: 保有ポジション操作
+    validations:
+      required: false
+
+  - type: input
+    id: pos_sl
+    attributes:
+      label: pos_sl
+      description: SL価格
+    validations:
+      required: false
+
+  - type: input
+    id: pos_tp
+    attributes:
+      label: pos_tp
+      description: TP価格
+    validations:
+      required: false
