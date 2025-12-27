@@ -1,7 +1,9 @@
 name: "XAUUSD Order (Generate orders/xauusd.txt)"
 description: "フォーム入力 → GitHub Actionsで orders/xauusd.txt を生成してpushします"
 title: "XAUUSD Order: "
-labels: ["order", "xauusd"]
+labels: 
+  - order
+  - xauusd
 assignees: []
 body:
   - type: markdown
