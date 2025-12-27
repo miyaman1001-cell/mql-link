@@ -100,7 +100,6 @@ body:
       description: "保有ポジション操作（空欄なら出力なし）"
       options:
         - ""
-        - NONE
         - SET_SLTP
         - CLEAR_SLTP
       default: 0
