@@ -1,14 +1,22 @@
-name: XAUUSD Trade Command
-description: XAUUSD EA への指示送信フォーム
-title: "XAUUSD: "
-labels: ["xauusd", "command"]
-
+name: "XAUUSD Order (Generate orders/xauusd.txt)"
+description: "フォーム入力 → GitHub Actionsで orders/xauusd.txt を生成してpushします"
+title: "XAUUSD Order: "
+labels: ["order", "xauusd"]
+assignees: []
 body:
+  - type: markdown
+    attributes:
+      value: |
+        ここで入力した内容から **orders/xauusd.txt** を自動生成します。
+        - `state` は必須（デフォルト KEEP）
+        - 空欄の項目は txt に出力しません（無駄なテキストを減らします）
+        - magic はフォームから除外（EA側 input で固定）
+
   - type: dropdown
     id: state
     attributes:
-      label: State
-      description: EAの状態制御
+      label: state
+      description: "KEEP / IDLE / BREAK / MONITOR"
       options:
         - KEEP
         - IDLE
@@ -18,23 +26,16 @@ body:
     validations:
       required: true
 
-  - type: input
-    id: command_id
-    attributes:
-      label: command_id
-      description: 例）20251226_001（空欄可）
-      placeholder: "YYYYMMDD_xxx"
-    validations:
-      required: false
-
   - type: dropdown
     id: direction
     attributes:
       label: direction
+      description: "BUY / SELL（空欄なら出力なし）"
       options:
+        - ""
         - BUY
         - SELL
-      description: エントリー方向（MONITOR時）
+      default: 0
     validations:
       required: false
 
@@ -42,7 +43,8 @@ body:
     id: watch_price
     attributes:
       label: watch_price
-      description: 監視開始価格
+      description: "監視開始価格（例: 4328.5）空欄可"
+      placeholder: "4328.5"
     validations:
       required: false
 
@@ -50,7 +52,8 @@ body:
     id: invalidate_price
     attributes:
       label: invalidate_price
-      description: 無効判定価格
+      description: "無効判定価格（例: 4313.3）空欄可"
+      placeholder: "4313.3"
     validations:
       required: false
 
@@ -58,7 +61,8 @@ body:
     id: bounce_points
     attributes:
       label: bounce_points
-      description: サポート反発判定幅（points）
+      description: "反発幅（Point）空欄可"
+      placeholder: "120"
     validations:
       required: false
 
@@ -66,7 +70,8 @@ body:
     id: stop_points
     attributes:
       label: stop_points
-      description: 損切幅（points）
+      description: "損切幅（Point）空欄可"
+      placeholder: "250"
     validations:
       required: false
 
@@ -74,7 +79,17 @@ body:
     id: lots
     attributes:
       label: lots
-      description: ロット数（未入力なら 0.01）
+      description: "ロット（デフォルト 0.01。空欄なら出力しない＝EA側デフォルト運用も可）"
+      placeholder: "0.01"
+    validations:
+      required: false
+
+  - type: input
+    id: max_spread_points
+    attributes:
+      label: max_spread_points
+      description: "最大スプレッド（Point）空欄可"
+      placeholder: "60"
     validations:
       required: false
 
@@ -82,11 +97,13 @@ body:
     id: pos_action
     attributes:
       label: pos_action
+      description: "保有ポジション操作（空欄なら出力なし）"
       options:
         - ""
+        - NONE
         - SET_SLTP
         - CLEAR_SLTP
-      description: 保有ポジション操作
+      default: 0
     validations:
       required: false
 
@@ -94,7 +111,8 @@ body:
     id: pos_sl
     attributes:
       label: pos_sl
-      description: SL価格
+      description: "pos_action=SET_SLTP のときの SL 価格（空欄可）"
+      placeholder: "0"
     validations:
       required: false
 
@@ -102,6 +120,15 @@ body:
     id: pos_tp
     attributes:
       label: pos_tp
-      description: TP価格
+      description: "pos_action=SET_SLTP のときの TP 価格（空欄可）"
+      placeholder: "0"
     validations:
       required: false
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: confirm
+      options:
+        - label: "この内容で orders/xauusd.txt を生成する"
+          required: true
