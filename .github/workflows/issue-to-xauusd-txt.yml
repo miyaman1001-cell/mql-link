@@ -101,10 +101,11 @@ jobs:
           echo "----- generated: $out -----"
           cat "$out" || true
 
-      - name: Commit & Push (if changed)
+      - name: Commit & Push (if changed) with rebase + retry
         shell: bash
         run: |
           set -euo pipefail
+
           if git diff --quiet -- orders/xauusd.txt; then
             echo "No changes. Skip commit."
             exit 0
@@ -115,4 +116,28 @@ jobs:
 
           git add orders/xauusd.txt
           git commit -m "Update orders/xauusd.txt from Issue #${{ github.event.issue.number }}"
-          git push
+
+          # ここからが重要：リモートを取り込んで fast-forward 可能にする
+          git fetch origin main
+
+          # rebase でローカルcommitを最新mainの上に乗せる
+          if ! git rebase origin/main; then
+            echo "Rebase failed (conflict). Abort."
+            git rebase --abort || true
+            exit 1
+          fi
+
+          # push 失敗時のリトライ（同時更新に強くする）
+          for i in 1 2 3 4 5; do
+            if git push origin HEAD:main; then
+              echo "Push success."
+              exit 0
+            fi
+            echo "Push rejected. Refetch & rebase then retry... ($i/5)"
+            git fetch origin main
+            git rebase origin/main || (git rebase --abort || true; exit 1)
+            sleep $((i*2))
+          done
+
+          echo "Push failed after retries."
+          exit 1
