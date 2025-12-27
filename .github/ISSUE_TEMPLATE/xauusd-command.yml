@@ -55,7 +55,8 @@ body:
     attributes:
       label: invalidate_price
       description: "無効判定価格（例: 4313.3）空欄可"
-      placeholder: "4313.3"
+      # placeholder: "4313.3"
+      default: ""
     validations:
       required: false
 
@@ -64,7 +65,8 @@ body:
     attributes:
       label: bounce_points
       description: "反発幅（Point）空欄可"
-      placeholder: "120"
+      # placeholder: "120"
+      default: 1500
     validations:
       required: false
 
@@ -73,7 +75,8 @@ body:
     attributes:
       label: stop_points
       description: "損切幅（Point）空欄可"
-      placeholder: "250"
+      # placeholder: "250"
+      default: 1000
     validations:
       required: false
 
@@ -82,7 +85,8 @@ body:
     attributes:
       label: lots
       description: "ロット（デフォルト 0.01。空欄なら出力しない＝EA側デフォルト運用も可）"
-      placeholder: "0.01"
+      # placeholder: "0.01"
+      default: 0.01
     validations:
       required: false
 
