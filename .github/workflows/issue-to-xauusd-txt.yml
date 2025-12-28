@@ -172,32 +172,35 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          
           out="orders/xauusd.txt"
-
-          # state が KEEP/IDLE/MONITOR/BREAK 等でも、watch_price と invalidate_price が
-          # 空 or 0 だと危険なことが多いので BREAK に倒す（運用方針に合わせて調整）
-          wp="$(grep -E '^watch_price=' "$out" | tail -n1 | cut -d= -f2- || true)"
-          ip="$(grep -E '^invalidate_price=' "$out" | tail -n1 | cut -d= -f2- || true)"
-
-          is_bad_num() {
-            local x="$1"
-            [[ -z "$x" ]] && return 0
-            # 0 / 0.0 / 0.00 を bad 扱いしたい場合
-            awk -v v="$x" 'BEGIN{exit !(v+0==0)}' >/dev/null 2>&1 && return 0
-            return 1
+          
+          # key=value をファイルから読む（無ければ空）
+          getv() {
+            local k="$1"
+            [[ -f "$out" ]] || { echo ""; return; }
+            awk -F= -v key="$k" '$1==key {sub(/^[^=]*=/,""); print; exit}' "$out"
           }
-
-          # 強制 BREAK は「新規エントリーを意図した指示」にのみ適用する。
-          # direction が未指定の場合、watch / invalidate は不要とする。
-          if [[ -n "$DIRECTION" ]]; then
-            if is_bad_num "$wp" || is_bad_num "$ip"; then
-              sed -i 's/^state=.*/state=BREAK/' "$out"
-              echo "Critical params missing/zero -> state=BREAK forced."
-            fi
+          
+          DIRECTION="$(getv direction)"
+          WATCH_PRICE="$(getv watch_price)"
+          INVALIDATE_PRICE="$(getv invalidate_price)"
+          STATE="$(getv state)"
+          
+          # 未定義対策（念のため）
+          DIRECTION="${DIRECTION:-}"
+          WATCH_PRICE="${WATCH_PRICE:-}"
+          INVALIDATE_PRICE="${INVALIDATE_PRICE:-}"
+          STATE="${STATE:-}"
+          
+          # ★今回の条件：directionがある時だけ、watch&invalidateが両方空ならBREAK
+          if [[ -n "$DIRECTION" && -z "$WATCH_PRICE" && -z "$INVALIDATE_PRICE" ]]; then
+            echo "state=BREAK" >> "$out"
           fi
-
-          echo "----- final: $out -----"
+          
+          echo "----- after safety -----"
           cat "$out" || true
+
 
       # ---------- commit & push（rebase + retry） ----------
       - name: Commit & Push (if changed) with rebase + retry
