@@ -1,11 +1,11 @@
 state=KEEP
-direction=SELL
-watch_price=4600
-invalidate_price=4800
+direction=BUY
+watch_price=4400
+invalidate_price=4300
 bounce_points=1500
 stop_points=1000
 lots=0.01
 max_spread_points=80
 pos_action=SET_SLTP
-pos_sl=4800
-pos_tp=4200
+pos_sl=4200
+pos_tp=4800
