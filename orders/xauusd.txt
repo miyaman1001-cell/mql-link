@@ -1,8 +1,6 @@
-direction=BUY
-invalidate_price=4400
 bounce_points=1500
 stop_points=1000
 lots=0.01
 max_spread_points=80
-command_id=20251228_182707Z_I38_U1766946427
-state=BREAK
+command_id=20251228_185510Z_I20_U1766948110
+state=KEEP
