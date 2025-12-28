@@ -168,7 +168,7 @@ jobs:
           cat "$out" || true
 
       # ---------- 空/0 の事故防止（任意）：watch/invalidate が空なら強制 BREAK ----------
-      - name: Safety force BREAK when critical params missing
+      - name: Safety:force BREAK when critical params missing
         shell: bash
         run: |
           set -euo pipefail
