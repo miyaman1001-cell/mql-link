@@ -101,6 +101,26 @@ jobs:
           echo "----- generated: $out -----"
           cat "$out" || true
 
+      - name: Generate command_id (if missing)
+        id: gen_cid
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Issue metadata
+          ISSUE_NO='${{ github.event.issue.number }}'
+          UPDATED_AT='${{ github.event.issue.updated_at }}'
+
+          # updated_at をUTCで yyyymmdd_hhmmss に
+          TS_UTC="$(date -u -d "$UPDATED_AT" +%Y%m%d_%H%M%SZ)"
+          # updated_at を epoch 秒に（編集のたびに変わる）
+          EPOCH="$(date -u -d "$UPDATED_AT" +%s)"
+
+          # 生成 command_id（例: 20251229_031500Z_I12_U1767006900）
+          CID="${TS_UTC}_I${ISSUE_NO}_U${EPOCH}"
+
+          echo "command_id=$CID" >> "$GITHUB_OUTPUT"
+
       - name: Commit & Push (if changed) with rebase + retry
         shell: bash
         run: |
