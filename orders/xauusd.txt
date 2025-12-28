@@ -1,8 +1,8 @@
 state=KEEP
 direction=BUY
-watch_price=4500
-invalidate_price=4400
+watch_price=4300
+invalidate_price=4200
 bounce_points=1500
 stop_points=1000
-lots=0.01
+lots=0.02
 max_spread_points=80
