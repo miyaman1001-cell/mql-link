@@ -172,10 +172,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          
           out="orders/xauusd.txt"
           
-          # key=value をファイルから読む（無ければ空）
           getv() {
             local k="$1"
             [[ -f "$out" ]] || { echo ""; return; }
@@ -185,24 +183,31 @@ jobs:
           DIRECTION="$(getv direction)"
           WATCH_PRICE="$(getv watch_price)"
           INVALIDATE_PRICE="$(getv invalidate_price)"
-          STATE="$(getv state)"
           
-          # 未定義対策（念のため）
           DIRECTION="${DIRECTION:-}"
           WATCH_PRICE="${WATCH_PRICE:-}"
           INVALIDATE_PRICE="${INVALIDATE_PRICE:-}"
-          STATE="${STATE:-}"
           
-          # ★今回の条件：directionがある時だけ、watch&invalidateが両方空ならBREAK
-          if [[ -n "$DIRECTION" ]]; then
-            if [[ -z "$WATCH_PRICE" || -z "$INVALIDATE_PRICE" ]]; then
-              echo "state=BREAK" >> "$out"
-            fi
+          # --- state= を1行に正規化（複数あれば最後のstate以外を削除） ---
+          # 1) 既存 state= 行をすべて消して、最後に state=KEEP を付け直す（まずベースを作る）
+          tmp="$(mktemp)"
+          grep -v '^state=' "$out" > "$tmp" || true
+          
+          # 既存stateの値（最後に出現したもの）を拾う。なければ KEEP
+          LAST_STATE="$(awk -F= '$1=="state"{v=$2} END{print v}' "$out" 2>/dev/null || true)"
+          LAST_STATE="${LAST_STATE:-KEEP}"
+          
+          echo "state=${LAST_STATE}" >> "$tmp"
+          mv "$tmp" "$out"
+          
+          # --- Safety条件：directionがある時だけ、watch/invalidate のどちらかが空なら BREAK ---
+          if [[ -n "$DIRECTION" && ( -z "$WATCH_PRICE" || -z "$INVALIDATE_PRICE" ) ]]; then
+            # state= を BREAK に置換（既に1行化済み）
+            sed -i 's/^state=.*/state=BREAK/' "$out"
           fi
           
           echo "----- after safety -----"
           cat "$out" || true
-
 
       # ---------- commit & push（rebase + retry） ----------
       - name: Commit & Push (if changed) with rebase + retry
