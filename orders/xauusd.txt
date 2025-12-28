@@ -1,9 +1,7 @@
-state=KEEP
-direction=BUY
+state=BREAK
 watch_price=4400
-invalidate_price=4300
 bounce_points=1500
 stop_points=1000
 lots=0.01
 max_spread_points=80
-command_id=20251228_171101Z_I23_U1766941861
+command_id=20251228_171959Z_I24_U1766942399
