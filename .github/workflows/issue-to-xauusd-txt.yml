@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   write-order-file:
-    # ラベルが両方付いている Issue だけ実行
+    # 「order」「xauusd」両ラベルが付いた Issue だけ実行
     if: >
       contains(github.event.issue.labels.*.name, 'order') &&
       contains(github.event.issue.labels.*.name, 'xauusd')
@@ -24,10 +24,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ---------- command_id を自動生成（後でファイルに注入） ----------
+      - name: Generate command_id
+        id: gen_cid
+        shell: bash
+        run: |
+          set -euo pipefail
+          ISSUE_NO='${{ github.event.issue.number }}'
+          UPDATED_AT='${{ github.event.issue.updated_at }}'
+
+          # UTCで yyyymmdd_hhmmssZ
+          TS_UTC="$(date -u -d "$UPDATED_AT" +%Y%m%d_%H%M%SZ)"
+          # epoch 秒（編集のたびに変わる）
+          EPOCH="$(date -u -d "$UPDATED_AT" +%s)"
+
+          # 例: 20251229_031500Z_I12_U1767006900
+          CID="${TS_UTC}_I${ISSUE_NO}_U${EPOCH}"
+          echo "command_id=$CID" >> "$GITHUB_OUTPUT"
+          echo "Generated command_id=$CID"
+
+      # ---------- Issue 本文 → orders/xauusd.txt を生成 ----------
       - name: Build orders/xauusd.txt from Issue body
         env:
           ISSUE_BODY: ${{ github.event.issue.body }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
         shell: bash
         run: |
           set -euo pipefail
@@ -36,17 +55,20 @@ jobs:
           mkdir -p "$(dirname "$out")"
           : > "$out"
 
-          # --- 見出し(### ...) を key に変換 ---
-          # Issueフォームの "label:" の文字列に合わせて case を調整してください。
-          # 例: label を日本語にしている場合は日本語に合わせる。
+          # 既定値（滅多に変えない想定の項目）
+          DEFAULT_STATE="KEEP"         # state必須の既定
+          DEFAULT_LOTS="0.01"          # ロット既定
+          DEFAULT_MAX_SPREAD=""        # 空なら出力しない（必要なら数値を入れる）
+          DEFAULT_BOUNCE_POINTS=""     # 空なら出力しない（必要なら数値を入れる）
+          DEFAULT_STOP_POINTS=""       # 空なら出力しない（必要なら数値を入れる）
+
+          # --- 見出し(### ...) -> key 変換 ---
+          # Issueフォームの見出し文字列に合わせて調整してください（大小文字も一致が無難）
           to_key() {
             local h="$1"
-            # 余計な前後空白を除去
             h="$(echo "$h" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-
             case "$h" in
               "state") echo "state" ;;
-              "command_id") echo "command_id" ;;
               "direction") echo "direction" ;;
               "watch_price") echo "watch_price" ;;
               "invalidate_price") echo "invalidate_price" ;;
@@ -57,9 +79,21 @@ jobs:
               "pos_action") echo "pos_action" ;;
               "pos_sl") echo "pos_sl" ;;
               "pos_tp") echo "pos_tp" ;;
-              # 使わない見出しは空で返す（＝出力しない）
+              # command_id はフォームからは受け付けない運用ならコメントアウト推奨
+              # "command_id") echo "command_id" ;;
               *) echo "" ;;
             esac
+          }
+
+          # key=value を追記（空/No response は捨てる）
+          put_kv() {
+            local k="$1"
+            local v="$2"
+            v="$(echo "$v" | sed -e 's/\r$//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+            [[ -z "$k" ]] && return 0
+            [[ -z "$v" ]] && return 0
+            [[ "$v" == "_No response_" ]] && return 0
+            echo "${k}=${v}" >> "$out"
           }
 
           body="${ISSUE_BODY}"
@@ -72,55 +106,97 @@ jobs:
               continue
             fi
 
-            # 見出しの次に来る値を拾う（空行はスキップして次へ）
+            # 見出しの次に来る値を拾う（空行はスキップ）
             if [[ -n "$current" ]]; then
               val="$(echo "$line" | sed -e 's/\r$//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+              [[ -z "$val" ]] && continue
 
-              # 空行は無視して次の行へ（値が現れるまで待つ）
-              if [[ -z "$val" ]]; then
-                continue
-              fi
-
-              # 未回答マーカーは捨てる（＝行を作らない）
+              # 未回答は捨てる（行を作らない）
               if [[ "$val" == "_No response_" ]]; then
                 current=""
                 continue
               fi
 
               key="$(to_key "$current")"
-              if [[ -n "$key" ]]; then
-                # 値に "###" が混ざる等の事故を軽減（必要ならここで更に整形）
-                echo "${key}=${val}" >> "$out"
-              fi
-
+              put_kv "$key" "$val"
               current=""
             fi
           done <<< "$body"
+
+          # --------- 既定値の注入（未指定のときだけ） ---------
+          # state は必須：無ければ state=KEEP
+          if ! grep -q '^state=' "$out"; then
+            echo "state=${DEFAULT_STATE}" >> "$out"
+          fi
+
+          # lots：無ければ 0.01（空にしたい運用なら DEFAULT_LOTS を "" に）
+          if ! grep -q '^lots=' "$out"; then
+            [[ -n "$DEFAULT_LOTS" ]] && echo "lots=${DEFAULT_LOTS}" >> "$out"
+          fi
+
+          # 以下は「既定値を置きたい場合だけ」出す（空なら出さない）
+          if ! grep -q '^max_spread_points=' "$out"; then
+            [[ -n "$DEFAULT_MAX_SPREAD" ]] && echo "max_spread_points=${DEFAULT_MAX_SPREAD}" >> "$out"
+          fi
+          if ! grep -q '^bounce_points=' "$out"; then
+            [[ -n "$DEFAULT_BOUNCE_POINTS" ]] && echo "bounce_points=${DEFAULT_BOUNCE_POINTS}" >> "$out"
+          fi
+          if ! grep -q '^stop_points=' "$out"; then
+            [[ -n "$DEFAULT_STOP_POINTS" ]] && echo "stop_points=${DEFAULT_STOP_POINTS}" >> "$out"
+          fi
 
           # 便利ログ
           echo "----- generated: $out -----"
           cat "$out" || true
 
-      - name: Generate command_id (if missing)
-        id: gen_cid
+      # ---------- command_id を必ず注入（フォーム入力は不要/非推奨運用） ----------
+      - name: Ensure command_id in orders/xauusd.txt
         shell: bash
         run: |
           set -euo pipefail
+          out="orders/xauusd.txt"
+          cid="${{ steps.gen_cid.outputs.command_id }}"
 
-          # Issue metadata
-          ISSUE_NO='${{ github.event.issue.number }}'
-          UPDATED_AT='${{ github.event.issue.updated_at }}'
+          # 既にあるなら置換、無ければ追記（常に最新の command_id に揃える）
+          if grep -q '^command_id=' "$out"; then
+            sed -i "s/^command_id=.*/command_id=${cid}/" "$out"
+          else
+            echo "command_id=${cid}" >> "$out"
+          fi
 
-          # updated_at をUTCで yyyymmdd_hhmmss に
-          TS_UTC="$(date -u -d "$UPDATED_AT" +%Y%m%d_%H%M%SZ)"
-          # updated_at を epoch 秒に（編集のたびに変わる）
-          EPOCH="$(date -u -d "$UPDATED_AT" +%s)"
+          echo "----- after command_id injection -----"
+          cat "$out" || true
 
-          # 生成 command_id（例: 20251229_031500Z_I12_U1767006900）
-          CID="${TS_UTC}_I${ISSUE_NO}_U${EPOCH}"
+      # ---------- 空/0 の事故防止（任意）：watch/invalidate が空なら強制 BREAK ----------
+      - name: Safety: force BREAK when critical params missing
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="orders/xauusd.txt"
 
-          echo "command_id=$CID" >> "$GITHUB_OUTPUT"
+          # state が KEEP/IDLE/MONITOR/BREAK 等でも、watch_price と invalidate_price が
+          # 空 or 0 だと危険なことが多いので BREAK に倒す（運用方針に合わせて調整）
+          wp="$(grep -E '^watch_price=' "$out" | tail -n1 | cut -d= -f2- || true)"
+          ip="$(grep -E '^invalidate_price=' "$out" | tail -n1 | cut -d= -f2- || true)"
 
+          is_bad_num() {
+            local x="$1"
+            [[ -z "$x" ]] && return 0
+            # 0 / 0.0 / 0.00 を bad 扱いしたい場合
+            awk -v v="$x" 'BEGIN{exit !(v+0==0)}' >/dev/null 2>&1 && return 0
+            return 1
+          }
+
+          if is_bad_num "$wp" || is_bad_num "$ip"; then
+            # state=BREAK を強制（既に state= がある想定）
+            sed -i 's/^state=.*/state=BREAK/' "$out"
+            echo "Critical params missing/zero -> state=BREAK forced."
+          fi
+
+          echo "----- final: $out -----"
+          cat "$out" || true
+
+      # ---------- commit & push（rebase + retry） ----------
       - name: Commit & Push (if changed) with rebase + retry
         shell: bash
         run: |
@@ -137,17 +213,14 @@ jobs:
           git add orders/xauusd.txt
           git commit -m "Update orders/xauusd.txt from Issue #${{ github.event.issue.number }}"
 
-          # ここからが重要：リモートを取り込んで fast-forward 可能にする
           git fetch origin main
 
-          # rebase でローカルcommitを最新mainの上に乗せる
           if ! git rebase origin/main; then
             echo "Rebase failed (conflict). Abort."
             git rebase --abort || true
             exit 1
           fi
 
-          # push 失敗時のリトライ（同時更新に強くする）
           for i in 1 2 3 4 5; do
             if git push origin HEAD:main; then
               echo "Push success."
