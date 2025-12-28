@@ -57,7 +57,6 @@ jobs:
               "pos_action") echo "pos_action" ;;
               "pos_sl") echo "pos_sl" ;;
               "pos_tp") echo "pos_tp" ;;
-              "command_id") echo "command_id" ;;
               # 使わない見出しは空で返す（＝出力しない）
               *) echo "" ;;
             esac
