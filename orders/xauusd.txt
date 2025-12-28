@@ -1,6 +1,8 @@
 state=KEEP
+direction=BUY
+watch_price=4400
 bounce_points=1500
 stop_points=1000
 lots=0.01
 max_spread_points=80
-command_id=20251228_175744Z_I29_U1766944664
+command_id=20251228_175828Z_I30_U1766944708
