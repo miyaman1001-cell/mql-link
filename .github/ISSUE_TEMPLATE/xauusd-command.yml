@@ -103,7 +103,6 @@ body:
       options:
         - ""
         - SET_SLTP
-        - CLEAR_SLTP
       default: 0
     validations:
       required: false
