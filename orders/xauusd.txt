@@ -1,9 +1,9 @@
-state=BREAK
+state=KEEP
+direction=BUY
+watch_price=4400
+invalidate_price=4300
 bounce_points=1500
 stop_points=1000
 lots=0.01
 max_spread_points=80
-pos_action=SET_SLTP
-pos_sl=4300
-pos_tp=4800
-command_id=20251228_171005Z_I22_U1766941805
+command_id=20251228_171101Z_I23_U1766941861
