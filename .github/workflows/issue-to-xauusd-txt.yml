@@ -187,10 +187,13 @@ jobs:
             return 1
           }
 
-          if is_bad_num "$wp" || is_bad_num "$ip"; then
-            # state=BREAK を強制（既に state= がある想定）
-            sed -i 's/^state=.*/state=BREAK/' "$out"
-            echo "Critical params missing/zero -> state=BREAK forced."
+          # 強制 BREAK は「新規エントリーを意図した指示」にのみ適用する。
+          # direction が未指定の場合、watch / invalidate は不要とする。
+          if [[ -n "$DIRECTION" ]]; then
+            if is_bad_num "$wp" || is_bad_num "$ip"; then
+              sed -i 's/^state=.*/state=BREAK/' "$out"
+              echo "Critical params missing/zero -> state=BREAK forced."
+            fi
           fi
 
           echo "----- final: $out -----"
