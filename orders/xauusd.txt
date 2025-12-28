@@ -1,5 +1,6 @@
-state=KEEP
+state=BREAK
 bounce_points=1500
 stop_points=1000
 lots=0.01
 max_spread_points=80
+command_id=20251228_164125Z_I20_U1766940085
