@@ -194,7 +194,7 @@ jobs:
           STATE="${STATE:-}"
           
           # ★今回の条件：directionがある時だけ、watch&invalidateが両方空ならBREAK
-          if [[ -n "$DIRECTION" &&  ]]; then
+          if [[ -n "$DIRECTION" ]]; then
             if [[ -z "$WATCH_PRICE" || -z "$INVALIDATE_PRICE" ]]; then
               echo "state=BREAK" >> "$out"
             fi
