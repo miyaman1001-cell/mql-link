@@ -29,6 +29,20 @@ body:
       required: true
 
   - type: dropdown
+    id: slot
+    attributes:
+      label: direction
+      description: "slotA~E （各スロットにつき１つのオーダー）"
+      options:
+        - slotA
+        - slotB
+        - slotC
+        - slotD
+        - slotE
+      default: 0
+    validations:
+      required: false
+  - type: dropdown
     id: direction
     attributes:
       label: direction
@@ -92,36 +106,6 @@ body:
       label: max_spread_points
       description: "最大スプレッド（Point）空欄可"
       value: "80"
-    validations:
-      required: false
-
-  - type: dropdown
-    id: pos_action
-    attributes:
-      label: pos_action
-      description: "保有ポジション操作（空欄なら出力なし）"
-      options:
-        - ""
-        - SET_SLTP
-      default: 0
-    validations:
-      required: false
-
-  - type: input
-    id: pos_sl
-    attributes:
-      label: pos_sl
-      description: "pos_action=SET_SLTP のときの SL 価格（空欄可）"
-      placeholder: "0"
-    validations:
-      required: false
-
-  - type: input
-    id: pos_tp
-    attributes:
-      label: pos_tp
-      description: "pos_action=SET_SLTP のときの TP 価格（空欄可）"
-      placeholder: "0"
     validations:
       required: false
 
