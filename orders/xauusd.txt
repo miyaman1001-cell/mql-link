@@ -3,5 +3,5 @@ stop_points=1000
 lots=0.01
 max_spread_points=80
 pos_action=CLEAR_SLTP
-command_id=20251230_161236Z_I42_U1767111156
-state=KEEP
+command_id=20251230_162149Z_I43_U1767111709
+state=IDLE
