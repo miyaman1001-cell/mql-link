@@ -95,15 +95,6 @@ body:
     validations:
       required: false
 
-  - type: input
-    id: magic
-    attributes:
-      label: magic
-      description: MagicNumber
-      value: "2025122801"
-    validations:
-      required: false
-
   - type: dropdown
     id: pos_action
     attributes:
@@ -112,7 +103,6 @@ body:
       options:
         - ""
         - SET_SLTP
-        - CLEAR_SLTP
       default: 0
     validations:
       required: false
