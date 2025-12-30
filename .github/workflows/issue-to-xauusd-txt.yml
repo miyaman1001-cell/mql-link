@@ -199,7 +199,7 @@ jobs:
           mv "$tmp" "$out"
           
           # --- Safety条件：directionがある時だけ、watch/invalidate のどちらかが空なら BREAK ---
-          if [[ -n "$DIRECTION" && ( -z "$WATCH_PRICE" || -z "$INVALIDATE_PRICE" ) ]]; then
+          if [[ -n "$DIRECTION" && ( -z "$SLOT" || -z "$WATCH_PRICE" || -z "$INVALIDATE_PRICE" ) ]]; then
             # state= を BREAK に置換（既に1行化済み）
             sed -i 's/^state=.*/state=BREAK/' "$out"
           fi
