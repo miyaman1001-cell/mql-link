@@ -69,6 +69,7 @@ jobs:
             h="$(echo "$h" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
             case "$h" in
               "state") echo "state" ;;
+              "slot") echo "slot" ;;
               "direction") echo "direction" ;;
               "watch_price") echo "watch_price" ;;
               "invalidate_price") echo "invalidate_price" ;;
@@ -76,9 +77,6 @@ jobs:
               "stop_points") echo "stop_points" ;;
               "lots") echo "lots" ;;
               "max_spread_points") echo "max_spread_points" ;;
-              "pos_action") echo "pos_action" ;;
-              "pos_sl") echo "pos_sl" ;;
-              "pos_tp") echo "pos_tp" ;;
               # command_id はフォームからは受け付けない運用ならコメントアウト推奨
               # "command_id") echo "command_id" ;;
               *) echo "" ;;
