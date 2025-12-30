@@ -1,11 +1,9 @@
 direction=BUY
-watch_price=4365
-invalidate_price=4330
+watch_price=4375
+invalidate_price=4340
 bounce_points=1500
 stop_points=1000
 lots=0.01
 max_spread_points=80
-pos_action=SET_SLTP
-pos_sl=4500
-command_id=20251230_164807Z_I46_U1767113287
+command_id=20251230_172907Z_I47_U1767115747
 state=IDLE
