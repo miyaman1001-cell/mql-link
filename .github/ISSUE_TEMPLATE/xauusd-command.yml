@@ -34,11 +34,11 @@ body:
       label: direction
       description: "slotA~E （各スロットにつき１つのオーダー）"
       options:
-        - slotA
-        - slotB
-        - slotC
-        - slotD
-        - slotE
+        - A
+        - B
+        - C
+        - D
+        - E
       default: 0
     validations:
       required: false
