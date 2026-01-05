@@ -1,10 +1,10 @@
 direction=A
 direction=BUY
-watch_price=4415
+watch_price=4410
 invalidate_price=4370
 bounce_points=2000
 stop_points=1000
 lots=0.01
 max_spread_points=80
-command_id=20260105_113749Z_I49_U1767613069
+command_id=20260105_131401Z_I50_U1767618841
 state=IDLE
