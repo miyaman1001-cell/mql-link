@@ -1,6 +1,10 @@
-bounce_points=1500
+direction=A
+direction=BUY
+watch_price=4415
+invalidate_price=4370
+bounce_points=2000
 stop_points=1000
 lots=0.01
 max_spread_points=80
-command_id=20251230_183406Z_I48_U1767119646
-state=BREAK
+command_id=20260105_113749Z_I49_U1767613069
+state=IDLE
