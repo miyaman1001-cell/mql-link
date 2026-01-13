@@ -43,7 +43,7 @@ jobs:
           echo "command_id=$CID" >> "$GITHUB_OUTPUT"
           echo "Generated command_id=$CID"
 
-      # ---------- Issue 本文 → orders/xauusd.txt を生成 ----------
+      # ---------- Issue 本文 → orders/xagusd.txt を生成 ----------
       - name: Build orders/xagusd.txt from Issue body
         env:
           ISSUE_BODY: ${{ github.event.issue.body }}
