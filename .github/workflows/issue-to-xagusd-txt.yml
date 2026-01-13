@@ -1,0 +1,247 @@
+name: Issue -> orders/xagusd.txt
+
+on:
+  issues:
+    types: [opened, edited, labeled, reopened]
+
+permissions:
+  contents: write
+  issues: read
+
+concurrency:
+  group: issue-to-orders-xagusd
+  cancel-in-progress: true
+
+jobs:
+  write-order-file:
+    # 「order」「xagusd」両ラベルが付いた Issue だけ実行
+    if: >
+      contains(github.event.issue.labels.*.name, 'order') &&
+      contains(github.event.issue.labels.*.name, 'xagusd')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ---------- command_id を自動生成（後でファイルに注入） ----------
+      - name: Generate command_id
+        id: gen_cid
+        shell: bash
+        run: |
+          set -euo pipefail
+          ISSUE_NO='${{ github.event.issue.number }}'
+          UPDATED_AT='${{ github.event.issue.updated_at }}'
+
+          # UTCで yyyymmdd_hhmmssZ
+          TS_UTC="$(date -u -d "$UPDATED_AT" +%Y%m%d_%H%M%SZ)"
+          # epoch 秒（編集のたびに変わる）
+          EPOCH="$(date -u -d "$UPDATED_AT" +%s)"
+
+          # 例: 20251229_031500Z_I12_U1767006900
+          CID="${TS_UTC}_I${ISSUE_NO}_U${EPOCH}"
+          echo "command_id=$CID" >> "$GITHUB_OUTPUT"
+          echo "Generated command_id=$CID"
+
+      # ---------- Issue 本文 → orders/xauusd.txt を生成 ----------
+      - name: Build orders/xagusd.txt from Issue body
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          out="orders/xagusd.txt"
+          mkdir -p "$(dirname "$out")"
+          : > "$out"
+
+          # 既定値（滅多に変えない想定の項目）
+          DEFAULT_STATE="KEEP"         # state必須の既定
+          DEFAULT_LOTS="0.01"          # ロット既定
+          DEFAULT_MAX_SPREAD=""        # 空なら出力しない（必要なら数値を入れる）
+          DEFAULT_BOUNCE_POINTS=""     # 空なら出力しない（必要なら数値を入れる）
+          DEFAULT_STOP_POINTS=""       # 空なら出力しない（必要なら数値を入れる）
+
+          # --- 見出し(### ...) -> key 変換 ---
+          # Issueフォームの見出し文字列に合わせて調整してください（大小文字も一致が無難）
+          to_key() {
+            local h="$1"
+            h="$(echo "$h" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+            case "$h" in
+              "state") echo "state" ;;
+              "slot") echo "slot" ;;
+              "direction") echo "direction" ;;
+              "watch_price") echo "watch_price" ;;
+              "invalidate_price") echo "invalidate_price" ;;
+              "bounce_points") echo "bounce_points" ;;
+              "stop_points") echo "stop_points" ;;
+              "lots") echo "lots" ;;
+              "max_spread_points") echo "max_spread_points" ;;
+              # command_id はフォームからは受け付けない運用ならコメントアウト推奨
+              # "command_id") echo "command_id" ;;
+              *) echo "" ;;
+            esac
+          }
+
+          # key=value を追記（空/No response は捨てる）
+          put_kv() {
+            local k="$1"
+            local v="$2"
+            v="$(echo "$v" | sed -e 's/\r$//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+            [[ -z "$k" ]] && return 0
+            [[ -z "$v" ]] && return 0
+            [[ "$v" == "_No response_" ]] && return 0
+            echo "${k}=${v}" >> "$out"
+          }
+
+          body="${ISSUE_BODY}"
+
+          current=""
+          while IFS= read -r line; do
+            # 見出し行 "### xxx"
+            if [[ "$line" =~ ^###[[:space:]](.+)$ ]]; then
+              current="${BASH_REMATCH[1]}"
+              continue
+            fi
+
+            # 見出しの次に来る値を拾う（空行はスキップ）
+            if [[ -n "$current" ]]; then
+              val="$(echo "$line" | sed -e 's/\r$//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+              [[ -z "$val" ]] && continue
+
+              # 未回答は捨てる（行を作らない）
+              if [[ "$val" == "_No response_" ]]; then
+                current=""
+                continue
+              fi
+
+              key="$(to_key "$current")"
+              put_kv "$key" "$val"
+              current=""
+            fi
+          done <<< "$body"
+
+          # --------- 既定値の注入（未指定のときだけ） ---------
+          # state は必須：無ければ state=KEEP
+          if ! grep -q '^state=' "$out"; then
+            echo "state=${DEFAULT_STATE}" >> "$out"
+          fi
+
+          # lots：無ければ 0.01（空にしたい運用なら DEFAULT_LOTS を "" に）
+          if ! grep -q '^lots=' "$out"; then
+            [[ -n "$DEFAULT_LOTS" ]] && echo "lots=${DEFAULT_LOTS}" >> "$out"
+          fi
+
+          # 以下は「既定値を置きたい場合だけ」出す（空なら出さない）
+          if ! grep -q '^max_spread_points=' "$out"; then
+            [[ -n "$DEFAULT_MAX_SPREAD" ]] && echo "max_spread_points=${DEFAULT_MAX_SPREAD}" >> "$out"
+          fi
+          if ! grep -q '^bounce_points=' "$out"; then
+            [[ -n "$DEFAULT_BOUNCE_POINTS" ]] && echo "bounce_points=${DEFAULT_BOUNCE_POINTS}" >> "$out"
+          fi
+          if ! grep -q '^stop_points=' "$out"; then
+            [[ -n "$DEFAULT_STOP_POINTS" ]] && echo "stop_points=${DEFAULT_STOP_POINTS}" >> "$out"
+          fi
+
+          # 便利ログ
+          echo "----- generated: $out -----"
+          cat "$out" || true
+
+      # ---------- command_id を必ず注入（フォーム入力は不要/非推奨運用） ----------
+      - name: Ensure command_id in orders/xagusd.txt
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="orders/xagusd.txt"
+          cid="${{ steps.gen_cid.outputs.command_id }}"
+
+          # 既にあるなら置換、無ければ追記（常に最新の command_id に揃える）
+          if grep -q '^command_id=' "$out"; then
+            sed -i "s/^command_id=.*/command_id=${cid}/" "$out"
+          else
+            echo "command_id=${cid}" >> "$out"
+          fi
+
+          echo "----- after command_id injection -----"
+          cat "$out" || true
+
+      # ---------- 空/0 の事故防止（任意）：watch/invalidate が空なら強制 BREAK ----------
+      - name: 'Safety: force BREAK when critical params missing'
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="orders/xagusd.txt"
+          
+          getv() {
+            local k="$1"
+            [[ -f "$out" ]] || { echo ""; return; }
+            awk -F= -v key="$k" '$1==key {sub(/^[^=]*=/,""); print; exit}' "$out"
+          }
+          
+          DIRECTION="$(getv direction)"
+          WATCH_PRICE="$(getv watch_price)"
+          INVALIDATE_PRICE="$(getv invalidate_price)"
+          
+          DIRECTION="${DIRECTION:-}"
+          WATCH_PRICE="${WATCH_PRICE:-}"
+          INVALIDATE_PRICE="${INVALIDATE_PRICE:-}"
+          
+          # --- state= を1行に正規化（複数あれば最後のstate以外を削除） ---
+          # 1) 既存 state= 行をすべて消して、最後に state=KEEP を付け直す（まずベースを作る）
+          tmp="$(mktemp)"
+          grep -v '^state=' "$out" > "$tmp" || true
+          
+          # 既存stateの値（最後に出現したもの）を拾う。なければ KEEP
+          LAST_STATE="$(awk -F= '$1=="state"{v=$2} END{print v}' "$out" 2>/dev/null || true)"
+          LAST_STATE="${LAST_STATE:-KEEP}"
+          
+          echo "state=${LAST_STATE}" >> "$tmp"
+          mv "$tmp" "$out"
+          
+          # --- Safety条件：directionがある時だけ、watch/invalidate のどちらかが空なら BREAK ---
+          if [[ -n "$DIRECTION" && ( -z "$WATCH_PRICE" || -z "$INVALIDATE_PRICE" ) ]]; then
+            # state= を BREAK に置換（既に1行化済み）
+            sed -i 's/^state=.*/state=BREAK/' "$out"
+          fi
+          
+          echo "----- after safety -----"
+          cat "$out" || true
+
+      # ---------- commit & push（rebase + retry） ----------
+      - name: Commit & Push (if changed) with rebase + retry
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- orders/xagusd.txt; then
+            echo "No changes. Skip commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add orders/xagusd.txt
+          git commit -m "Update orders/xagusd.txt from Issue #${{ github.event.issue.number }}"
+
+          git fetch origin main
+
+          if ! git rebase origin/main; then
+            echo "Rebase failed (conflict). Abort."
+            git rebase --abort || true
+            exit 1
+          fi
+
+          for i in 1 2 3 4 5; do
+            if git push origin HEAD:main; then
+              echo "Push success."
+              exit 0
+            fi
+            echo "Push rejected. Refetch & rebase then retry... ($i/5)"
+            git fetch origin main
+            git rebase origin/main || (git rebase --abort || true; exit 1)
+            sleep $((i*2))
+          done
+
+          echo "Push failed after retries."
+          exit 1
