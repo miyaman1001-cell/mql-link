@@ -1,0 +1,118 @@
+name: "XAGUSD Order (Generate orders/xagusd.txt)"
+description: "フォーム入力 → GitHub Actionsで orders/xagusd.txt を生成してpushします"
+title: "XAGUSD Order: "
+labels: 
+  - order
+  - xagusd
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ここで入力した内容から **orders/xagusd.txt** を自動生成します。
+        - `state` は必須（デフォルト KEEP）
+        - 空欄の項目は txt に出力しません（無駄なテキストを減らします）
+        - magic はフォームから除外（EA側 input で固定）
+
+  - type: dropdown
+    id: state
+    attributes:
+      label: state
+      description: "KEEP / IDLE / BREAK / MONITOR"
+      options:
+        - KEEP
+        - IDLE
+        - BREAK
+        - MONITOR
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: slot
+    attributes:
+      label: slot
+      description: "slotA~E （各スロットにつき１つのオーダー）"
+      options:
+        - A
+        - B
+        - C
+        - D
+        - E
+      default: 0
+    validations:
+      required: false
+  - type: dropdown
+    id: direction
+    attributes:
+      label: direction
+      description: "BUY / SELL（空欄なら出力なし）"
+      options:
+        - ""
+        - BUY
+        - SELL
+      default: 0
+    validations:
+      required: false
+
+  - type: input
+    id: watch_price
+    attributes:
+      label: watch_price
+      description: "監視開始価格（例: 78.5）空欄可"
+      placeholder: "78.5"
+    validations:
+      required: false
+
+  - type: input
+    id: invalidate_price
+    attributes:
+      label: invalidate_price
+      description: "無効判定価格（例: 75.2）空欄可"
+      placeholder: "75.2"
+    validations:
+      required: false
+
+  - type: input
+    id: bounce_points
+    attributes:
+      label: bounce_points
+      description: "反発幅（Point）空欄可"
+      value: "1500"
+    validations:
+      required: false
+
+  - type: input
+    id: stop_points
+    attributes:
+      label: stop_points
+      description: "損切幅（Point）空欄可"
+      value: "1000"
+    validations:
+      required: false
+
+  - type: input
+    id: lots
+    attributes:
+      label: lots
+      description: "ロット（デフォルト 0.05。空欄なら出力しない＝EA側デフォルト運用も可）"
+      value: "0.05"
+    validations:
+      required: false
+
+  - type: input
+    id: max_spread_points
+    attributes:
+      label: max_spread_points
+      description: "最大スプレッド（Point）空欄可"
+      value: "80"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: confirm
+      options:
+        - label: "この内容で orders/xagusd.txt を生成する"
+          required: true
