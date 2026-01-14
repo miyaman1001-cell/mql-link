@@ -1,1 +1,10 @@
-
+slot=A
+direction=BUY
+watch_price=80
+invalidate_price=78
+bounce_points=100
+stop_points=50
+lots=0.05
+max_spread_points=80
+command_id=20260114_135534Z_I60_U1768398934
+state=IDLE
