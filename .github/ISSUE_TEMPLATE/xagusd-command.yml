@@ -78,7 +78,7 @@ body:
     attributes:
       label: bounce_points
       description: "反発幅（Point）空欄可"
-      value: "1500"
+      value: "100"
     validations:
       required: false
 
@@ -87,7 +87,7 @@ body:
     attributes:
       label: stop_points
       description: "損切幅（Point）空欄可"
-      value: "1000"
+      value: "50"
     validations:
       required: false
 
