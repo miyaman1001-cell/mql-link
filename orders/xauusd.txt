@@ -1,10 +1,10 @@
 slot=A
 direction=BUY
-watch_price=5050
-invalidate_price=4990
+watch_price=4985
+invalidate_price=4890
 bounce_points=1500
 stop_points=1000
 lots=0.01
 max_spread_points=80
-command_id=20260130_022638Z_I81_U1769739998
+command_id=20260130_060519Z_I83_U1769753119
 state=IDLE
