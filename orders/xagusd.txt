@@ -6,5 +6,5 @@ bounce_points=100
 stop_points=50
 lots=0.05
 max_spread_points=100
-command_id=20260204_134145Z_I89_U1770212505
+command_id=20260204_150213Z_I90_U1770217333
 state=IDLE
