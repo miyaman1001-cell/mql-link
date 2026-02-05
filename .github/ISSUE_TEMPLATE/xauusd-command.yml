@@ -101,11 +101,14 @@ body:
       required: false
 
   - type: input
-    id: max_spread_points
+    id: close_tf
     attributes:
-      label: max_spread_points
-      description: "最大スプレッド（Point）空欄可"
-      value: "80"
+      label: close_tf
+      description: "終値確定を確認する時間足（デフォルトはH4）"
+      options:
+        - 240
+        - 60
+        default: 240
     validations:
       required: false
 
