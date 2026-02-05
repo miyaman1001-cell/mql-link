@@ -58,7 +58,7 @@ jobs:
           # 既定値（滅多に変えない想定の項目）
           DEFAULT_STATE="KEEP"         # state必須の既定
           DEFAULT_LOTS="0.01"          # ロット既定
-          DEFAULT_MAX_SPREAD=""        # 空なら出力しない（必要なら数値を入れる）
+          DEFAULT_CLOSE_TF=""          # 空なら出力しない（必要なら数値を入れる）
           DEFAULT_BOUNCE_POINTS=""     # 空なら出力しない（必要なら数値を入れる）
           DEFAULT_STOP_POINTS=""       # 空なら出力しない（必要なら数値を入れる）
 
@@ -76,7 +76,7 @@ jobs:
               "bounce_points") echo "bounce_points" ;;
               "stop_points") echo "stop_points" ;;
               "lots") echo "lots" ;;
-              "max_spread_points") echo "max_spread_points" ;;
+              "close_tf") echo "close_tf" ;;
               # command_id はフォームからは受け付けない運用ならコメントアウト推奨
               # "command_id") echo "command_id" ;;
               *) echo "" ;;
@@ -133,8 +133,8 @@ jobs:
           fi
 
           # 以下は「既定値を置きたい場合だけ」出す（空なら出さない）
-          if ! grep -q '^max_spread_points=' "$out"; then
-            [[ -n "$DEFAULT_MAX_SPREAD" ]] && echo "max_spread_points=${DEFAULT_MAX_SPREAD}" >> "$out"
+          if ! grep -q '^close_tf=' "$out"; then
+            [[ -n "$DEFAULT_CLOSE_TF" ]] && echo "close_tf=${DEFAULT_CLOSE_TF}" >> "$out"
           fi
           if ! grep -q '^bounce_points=' "$out"; then
             [[ -n "$DEFAULT_BOUNCE_POINTS" ]] && echo "bounce_points=${DEFAULT_BOUNCE_POINTS}" >> "$out"
