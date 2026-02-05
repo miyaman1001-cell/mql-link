@@ -5,5 +5,5 @@ invalidate_price=3800
 bounce_points=1500
 stop_points=1000
 lots=0.01
-command_id=20260205_024429Z_I99_U1770259469
+command_id=20260205_024858Z_I101_U1770259738
 state=KEEP
