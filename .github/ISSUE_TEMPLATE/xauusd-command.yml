@@ -105,7 +105,7 @@ body:
     id: close_tf
     attributes:
       label: close_tf
-      description: "終値確定を確認する時間足（デフォルトはH4）"
+      description: "終値確定を確認する時間足（未指定ならH4）"
       options:
         - ""
         - 60
