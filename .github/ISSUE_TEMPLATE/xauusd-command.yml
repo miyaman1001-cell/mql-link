@@ -100,7 +100,7 @@ body:
     validations:
       required: false
 
-  - type: input
+  - type: dropdown
     id: close_tf
     attributes:
       label: close_tf
