@@ -108,8 +108,8 @@ body:
       description: "終値確定を確認する時間足（デフォルトはH4）"
       options:
         - ""
-        - BUY
-        - SELL
+        - 60
+        - 240
       default: 0
     validations:
       required: false
