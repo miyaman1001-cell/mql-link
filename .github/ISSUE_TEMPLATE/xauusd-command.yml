@@ -106,6 +106,7 @@ body:
       label: close_tf
       description: "終値確定を確認する時間足（空欄のときH4）"
       options:
+        - ""
         - 60
         - 240
         default: 0
