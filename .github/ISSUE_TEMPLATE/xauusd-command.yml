@@ -107,9 +107,10 @@ body:
       label: close_tf
       description: "終値確定を確認する時間足（デフォルトはH4）"
       options:
-        - "240"
-        - "60"
-        default: 0
+        - ""
+        - BUY
+        - SELL
+      default: 0
     validations:
       required: false
 
