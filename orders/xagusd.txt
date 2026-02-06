@@ -1,6 +1,10 @@
 slot=A
+direction=SELL
+watch_price=77.4
+invalidate_price=81.2
 bounce_points=1000
 stop_points=500
 lots=0.05
-command_id=20260205_030145Z_I106_U1770260505
-state=BREAK
+close_tf=60
+command_id=20260206_052644Z_I108_U1770355604
+state=IDLE
