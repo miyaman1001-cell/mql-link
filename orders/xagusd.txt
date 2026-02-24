@@ -5,5 +5,6 @@ invalidate_price=80.4
 bounce_points=1000
 stop_points=500
 lots=0.05
-command_id=20260224_013113Z_I128_U1771896673
+close_tf=60
+command_id=20260224_015639Z_I129_U1771898199
 state=IDLE
