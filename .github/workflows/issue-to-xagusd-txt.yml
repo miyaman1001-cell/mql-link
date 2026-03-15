@@ -77,6 +77,7 @@ jobs:
               "stop_points") echo "stop_points" ;;
               "lots") echo "lots" ;;
               "close_tf") echo "close_tf" ;;
+              "target_price") echo "target_price" ;;
               # command_id はフォームからは受け付けない運用ならコメントアウト推奨
               # "command_id") echo "command_id" ;;
               *) echo "" ;;
@@ -181,10 +182,12 @@ jobs:
           DIRECTION="$(getv direction)"
           WATCH_PRICE="$(getv watch_price)"
           INVALIDATE_PRICE="$(getv invalidate_price)"
+          TARGET_PRICE="$(getv target_price)"
           
           DIRECTION="${DIRECTION:-}"
           WATCH_PRICE="${WATCH_PRICE:-}"
           INVALIDATE_PRICE="${INVALIDATE_PRICE:-}"
+          TARGET_PRICE="${TARGET_PRICE:-}"
           
           # --- state= を1行に正規化（複数あれば最後のstate以外を削除） ---
           # 1) 既存 state= 行をすべて消して、最後に state=KEEP を付け直す（まずベースを作る）
@@ -199,7 +202,7 @@ jobs:
           mv "$tmp" "$out"
           
           # --- Safety条件：directionがある時だけ、watch/invalidate のどちらかが空なら BREAK ---
-          if [[ -n "$DIRECTION" && ( -z "$WATCH_PRICE" || -z "$INVALIDATE_PRICE" ) ]]; then
+          if [[ -n "$DIRECTION" && ( -z "$WATCH_PRICE" || -z "$INVALIDATE_PRICE" || -z "$TARGET_PRICE" ) ]]; then
             # state= を BREAK に置換（既に1行化済み）
             sed -i 's/^state=.*/state=BREAK/' "$out"
           fi
