@@ -92,6 +92,15 @@ body:
       required: false
 
   - type: input
+    id: target_price
+    attributes:
+      label: target_price
+      description: "TP価格（例: 85.5）空欄可"
+      placeholder: "85.5"
+    validations:
+      required: false
+
+  - type: input
     id: lots
     attributes:
       label: lots
