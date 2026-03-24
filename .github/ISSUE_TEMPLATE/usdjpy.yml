@@ -1,0 +1,123 @@
+name: "USDJPY Order (Generate orders/usdjpy.txt)"
+description: "フォーム入力 → GitHub Actionsで orders/usdjpy.txt を生成してpushします"
+title: "USDJPY Order: "
+labels: 
+  - order
+  - usdjpy
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ここで入力した内容から **orders/usdjpy.txt** を自動生成します。
+        - `state` は必須（デフォルト KEEP）
+        - 空欄の項目は txt に出力しません（無駄なテキストを減らします）
+        - magic はフォームから除外（EA側 input で固定）
+
+  - type: dropdown
+    id: state
+    attributes:
+      label: state
+      description: "KEEP / IDLE / BREAK / MONITOR"
+      options:
+        - KEEP
+        - IDLE
+        - BREAK
+        - MONITOR
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: slot
+    attributes:
+      label: slot
+      description: "slotA~E （各スロットにつき１つのオーダー）"
+      options:
+        - A
+        - B
+        - C
+        - D
+        - E
+      default: 0
+    validations:
+      required: false
+      
+  - type: dropdown
+    id: direction
+    attributes:
+      label: direction
+      description: "BUY / SELL（空欄なら出力なし）"
+      options:
+        - ""
+        - BUY
+        - SELL
+      default: 0
+    validations:
+      required: false
+
+  - type: input
+    id: watch_price
+    attributes:
+      label: watch_price
+      description: "監視開始価格（例: 158）空欄可"
+      placeholder: "158"
+    validations:
+      required: false
+
+  - type: input
+    id: invalidate_price
+    attributes:
+      label: invalidate_price
+      description: "無効判定価格（例: 156）空欄可"
+      placeholder: "156"
+    validations:
+      required: false
+
+  - type: input
+    id: bounce_points
+    attributes:
+      label: bounce_points
+      description: "反発幅（Point）空欄可"
+      value: "400"
+    validations:
+      required: false
+
+  - type: input
+    id: stop_points
+    attributes:
+      label: stop_points
+      description: "損切幅（Point）空欄可"
+      value: "200"
+    validations:
+      required: false
+
+  - type: input
+    id: target_price
+    attributes:
+      label: target_price
+      description: "TP価格（例: 160）空欄可"
+      placeholder: "160"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: close_tf
+    attributes:
+      label: close_tf
+      description: "終値確定を確認する時間足（未指定ならH4）"
+      options:
+        - ""
+        - 60
+        - 240
+      default: 0
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: confirm
+      options:
+        - label: "この内容で orders/usdjpy.txt を生成する"
+          required: true
