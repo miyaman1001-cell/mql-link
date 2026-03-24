@@ -1,1 +1,5 @@
-
+slot=A
+bounce_points=400
+stop_points=200
+command_id=20260324_175709Z_I164_U1774375029
+state=BREAK
