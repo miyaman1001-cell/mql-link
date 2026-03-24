@@ -100,15 +100,6 @@ body:
     validations:
       required: false
 
-  - type: input
-    id: lots
-    attributes:
-      label: lots
-      description: "ロット（デフォルト 0.05。空欄なら出力しない＝EA側デフォルト運用も可）"
-      value: "0.05"
-    validations:
-      required: false
-
   - type: dropdown
     id: close_tf
     attributes:
