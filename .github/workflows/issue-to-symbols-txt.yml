@@ -56,8 +56,10 @@ jobs:
             exit 1
           fi
       
+          out="orders/${symbol}.txt"
+          
           echo "symbol=$symbol" >> "$GITHUB_OUTPUT"
-          echo "Detected symbol: $symbol"
+          echo "out=$out" >> "$GITHUB_OUTPUT"
 
       # ---------- command_id を自動生成 ----------
       - name: Generate command_id
