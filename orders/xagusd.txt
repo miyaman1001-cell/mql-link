@@ -1,6 +1,5 @@
 slot=A
 bounce_points=1000
 stop_points=500
-lots=0.05
-command_id=20260315_221606Z_I156_U1773612966
+command_id=20260324_175547Z_I162_U1774374947
 state=BREAK
