@@ -33,14 +33,14 @@ jobs:
       - name: Detect target symbol
         id: detect_symbol
         shell: bash
-        env:
-          LABELS_JSON: ${{ toJson(github.event.issue.labels.*.name) }}
         run: |
           set -euo pipefail
-
-          labels='${LABELS_JSON}'
-
+      
+          labels='${{ toJson(github.event.issue.labels.*.name) }}'
+          echo "Labels raw: $labels"
+      
           symbol=""
+      
           if echo "$labels" | grep -q '"xauusd"'; then
             symbol="xauusd"
           elif echo "$labels" | grep -q '"xagusd"'; then
@@ -50,19 +50,14 @@ jobs:
           elif echo "$labels" | grep -q '"usdjpy"'; then
             symbol="usdjpy"
           fi
-
+      
           if [[ -z "$symbol" ]]; then
             echo "No supported symbol label found."
             exit 1
           fi
-
-          out="orders/${symbol}.txt"
-
+      
           echo "symbol=$symbol" >> "$GITHUB_OUTPUT"
-          echo "out=$out" >> "$GITHUB_OUTPUT"
-
-          echo "Detected symbol=$symbol"
-          echo "Output file=$out"
+          echo "Detected symbol: $symbol"
 
       # ---------- command_id を自動生成 ----------
       - name: Generate command_id
