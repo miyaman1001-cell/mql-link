@@ -1,5 +1,5 @@
 slot=A
 bounce_points=1500
 stop_points=1000
-command_id=20260324_175743Z_I165_U1774375063
-state=KEEP
+command_id=20260527_111716Z_I167_U1779880636
+state=BREAK
