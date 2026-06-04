@@ -1,10 +1,10 @@
 slot=A
-direction=BUY
-watch_price=4405
-invalidate_price=4465
+direction=SELL
+watch_price=4545
+invalidate_price=4580
 bounce_points=1500
 stop_points=1000
-target_price=4560
+target_price=4460
 close_tf=60
-command_id=20260602_013605Z_I179_U1780364165
+command_id=20260604_120202Z_I180_U1780574522
 state=IDLE
