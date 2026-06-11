@@ -1,9 +1,10 @@
 slot=A
 direction=BUY
-watch_price=62
-invalidate_price=60.5
+watch_price=61.5
+invalidate_price=60
 bounce_points=1000
 stop_points=500
+target_price=64
 close_tf=60
-command_id=20260610_110038Z_I188_U1781089238
-state=BREAK
+command_id=20260611_044147Z_I189_U1781152907
+state=IDLE
