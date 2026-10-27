@@ -6,5 +6,5 @@ bounce_points=1500
 stop_points=1000
 target_price=4600
 close_tf=240
-command_id=20261023_171748Z_I212_U1792775868
+command_id=20261027_031142Z_I213_U1793070702
 state=IDLE
